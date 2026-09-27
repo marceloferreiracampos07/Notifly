@@ -1,33 +1,24 @@
-
-import { CanActivate,ExecutionContext,Injectable, UnauthorizedException,} from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { Request } from 'express';
+import { ExecutionContext, Injectable } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { AuthGuard } from '@nestjs/passport';
+import { IS_PUBLIC_KEY } from '../decorators/public-decorator.js';
 
 @Injectable()
-
-export class JwtAuthGuard implements CanActivate{
-    constructor(private readonly jwtservice:JwtService){}
-
-    async canActivate(context: ExecutionContext): Promise<boolean> {
-        const request = context.switchToHttp().getRequest()
-        const tokenjwt = this.extractTokenFromHeader(request)
-
-    if (!tokenjwt) {
-      throw new UnauthorizedException("o token jwt não foi fornecido ");
-    }
-    try {
-
-      const payload = await this.jwtservice.verifyAsync(tokenjwt);
-      request['user'] = payload;
-
-    } catch {
-      throw new UnauthorizedException("Token jwt invalido ");
-    }
-    return true;
+export class JwtAuthGuard extends AuthGuard('jwt') {
+  constructor(private readonly reflector: Reflector) {
+    super();
   }
 
-  private extractTokenFromHeader(request: Request): string | undefined {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    return type === 'Bearer' ? token : undefined;
-}
+  canActivate(context: ExecutionContext) {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (isPublic) {
+      return true;
     }
+
+    return super.canActivate(context);
+  }
+}

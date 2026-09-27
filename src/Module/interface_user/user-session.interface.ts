@@ -1,5 +1,4 @@
-// user-session.interface.ts
-export interface UserSession {
+export class UserSession {
   id: string;
   email: string;
 }

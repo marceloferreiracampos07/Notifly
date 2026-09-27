@@ -1,12 +1,7 @@
-import { IsString, IsNotEmpty, IsOptional, IsDateString, MaxLength } from 'class-validator';
+import { IsString, IsNotEmpty } from 'class-validator';
 
-export class CriarApiKeyDto {
+export class CreateApiKeyDto {
   @IsString()
   @IsNotEmpty()
-  @MaxLength(50)
-  nome: string; 
-
-  @IsOptional()
-  @IsDateString()
-  expiraEm?: string; 
+  key: string;
 }

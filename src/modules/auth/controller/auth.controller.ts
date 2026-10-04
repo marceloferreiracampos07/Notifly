@@ -9,7 +9,6 @@ import { CreateApiKeyDto } from '../../DTO/create-api-key.dto.js';
 import type { UserSession } from '../../interface_user/user-session.interface.js';
 import { CurrentUser } from '../../../common/decorators/get-user-decorator.js';
 import { Public } from '../../../common/decorators/public-decorator.js';
-import { JwtAuthGuard } from '../../../common/guards/JwtAuthGuard.js';
 
 @Controller('auth')
 export class AuthController {
@@ -50,7 +49,6 @@ export class AuthController {
     return this.apiKeyService.getSystemApiKey();
   }
 
-  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
   @Post('api-keys')
   async createApiKey(@CurrentUser() user: UserSession, @Body() dto: CreateApiKeyDto) {

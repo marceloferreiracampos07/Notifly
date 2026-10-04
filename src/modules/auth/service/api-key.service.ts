@@ -12,13 +12,20 @@ export class ApiKeyService {
   ) {}
 
   async generateApiKey(userId: string, dto?: CreateApiKeyDto) {
-    const key = dto?.key || crypto.randomBytes(24).toString('hex');
-    return this.prismaService.apiKey.create({
+    const rawKey = dto?.key || crypto.randomBytes(24).toString('hex');
+    const hashedKey = crypto.createHash('sha256').update(rawKey).digest('hex');
+
+    await this.prismaService.apiKey.create({
       data: {
-        key,
+        key: hashedKey,
         userId,
       },
     });
+
+    return {
+      apiKey: rawKey,
+      message: 'Guarde esta chave de API em um local seguro. Ela não poderá ser exibida novamente.',
+    };
   }
 
   getSystemApiKey() {

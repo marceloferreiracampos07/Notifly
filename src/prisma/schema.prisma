@@ -30,6 +30,9 @@ model Notification {
   id        String   @id @default(uuid())
   title     String
   content   String
+  channel   String
+  recipient String
+  status    String   @default("QUEUED")
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
@@ -52,4 +55,16 @@ model WebhookDelivery {
   status         String              // Ex: SUCCESS, FAILED
   payload        String              @db.Text
   createdAt      DateTime            @default(now())
+}
+model OutboxEvent {
+  id            String   @id @default(uuid())
+  aggregateType String   @map("aggregate_type")
+  aggregateId   String   @map("aggregate_id")
+  type          String
+  payload       Json     @db.JsonB // Ou usa apenas 'Json' (também podes usar String @db.Text se preferires salvar com JSON.stringify)
+  status        String   @default("PENDING") // Ex: PENDING, PROCESSED, FAILED
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([status, createdAt])
+  @@map("outbox_events")
 }

@@ -1,8 +1,8 @@
-import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { NestFactory, Reflector } from '@nestjs/core';
+import { ValidationPipe, ClassSerializerInterceptor } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module.js';
-import { HttpExceptionFilter } from './common/filters/HttpExceptionFilter.js';
+import { AllExceptionsFilter } from './common/filters/HttpExceptionFilter.js';
 import { TransformInterceptor } from './common/interceptors/TransformInterceptor.js';
 import { LoggingInterceptor } from './common/interceptors/LoggingInterceptor.js';
 
@@ -20,9 +20,10 @@ async function bootstrap() {
     }),
   );
 
-  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalFilters(new AllExceptionsFilter());
   app.useGlobalInterceptors(
     new LoggingInterceptor(),
+    new ClassSerializerInterceptor(app.get(Reflector)),
     new TransformInterceptor(),
   );
 

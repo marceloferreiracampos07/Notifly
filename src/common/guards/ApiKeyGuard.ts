@@ -27,8 +27,10 @@ export class ApiKeyGuard implements CanActivate {
       }
     }
 
+    const dbApiKeyHash = crypto.createHash('sha256').update(apiKey).digest('hex');
+
     const dbApiKey = await this.prismaService.apiKey.findUnique({
-      where: { key: apiKey },
+      where: { key: dbApiKeyHash },
     });
 
     if (!dbApiKey) {

@@ -27,7 +27,7 @@ export class NotificationProcessor extends WorkerHost {
   async process(job: Job<NotificationJobPayloadDto, { success: boolean; notificationId: string }, string>): Promise<{ success: boolean; notificationId: string }> {
     const { notificationId, userId, channel, recipient, title } = job.data;
 
-    this.logger.log(`[Worker] Processando job ${job.id} - Tentativa ${job.attemptsMade + 1} para a notificação ${notificationId}...`);
+    this.logger.log(`Processando job ${job.id} - Tentativa ${job.attemptsMade + 1} para a notificação ${notificationId}...`);
 
     try {
     

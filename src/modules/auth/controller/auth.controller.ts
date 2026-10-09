@@ -2,7 +2,6 @@ import { Controller, Post, UseGuards, HttpCode, HttpStatus, Body } from '@nestjs
 import { AuthService } from '../service/auth.service.js';
 import { ApiKeyService } from '../service/api-key.service.js';
 import { LocalAuthGuard } from '../../../common/guards/local-auth.guard.js';
-import { ApiKeyGuard } from '../../../common/guards/ApiKeyGuard.js';
 import { CreateAuthDto } from '../../DTO/register.dto.js';
 import { LoginDto } from '../../DTO/login.dto.js';
 import { CreateApiKeyDto } from '../../DTO/create-api-key.dto.js';
@@ -40,13 +39,6 @@ export class AuthController {
       user,
       ...tokenData,
     };
-  }
-
-  @UseGuards(ApiKeyGuard)
-  @HttpCode(HttpStatus.OK)
-  @Post('api-keys/system')
-  async getApiKey() {
-    return this.apiKeyService.getSystemApiKey();
   }
 
   @HttpCode(HttpStatus.CREATED)

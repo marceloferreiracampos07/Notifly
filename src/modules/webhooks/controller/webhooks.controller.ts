@@ -1,4 +1,4 @@
-import { Controller, Post, Get, HttpCode, HttpStatus, Body, Req } from '@nestjs/common';
+import { Controller, Post, Get, HttpCode, HttpStatus, Body } from '@nestjs/common';
 import { WebhooksService } from '../service/webhooks.service.js';
 import { CreateWebhookSubscriptionDto } from '../DTO/Creatsubscription.js';
 import { CurrentUser } from '../../../common/decorators/get-user-decorator.js';

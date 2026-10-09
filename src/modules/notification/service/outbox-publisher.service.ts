@@ -48,6 +48,11 @@ export class OutboxPublisherService {
 
           await this.notificationQueue.add(event.type, parsedPayload, {
             jobId: event.id,
+            attempts: 3,
+            backoff: {
+              type: 'exponential',
+              delay: 1000,
+            },
           });
           await this.prisma.outboxEvent.update({
             where: { id: event.id },

@@ -63,8 +63,9 @@ model OutboxEvent {
   aggregateType String   @map("aggregate_type")
   aggregateId   String   @map("aggregate_id")
   type          String
-  payload       Json     @db.JsonB // Ou usa apenas 'Json' (também podes usar String @db.Text se preferires salvar com JSON.stringify)
-  status        String   @default("PENDING") // Ex: PENDING, PROCESSED, FAILED
+  payload       Json     @db.JsonB
+  status        String   @default("PENDING") // PENDING, DISPATCHED, FAILED
+  attempts      Int      @default(0)
   createdAt     DateTime @default(now()) @map("created_at")
 
   @@index([status, createdAt])

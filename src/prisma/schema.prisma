@@ -54,6 +54,8 @@ model WebhookDelivery {
   subscription   WebhookSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
   status         String              // Ex: SUCCESS, FAILED
   payload        String              @db.Text
+  attempts       Int                 @default(1)
+  lastError      String?             @db.Text
   createdAt      DateTime            @default(now())
 }
 model OutboxEvent {

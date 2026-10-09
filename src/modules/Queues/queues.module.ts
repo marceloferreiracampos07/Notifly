@@ -2,6 +2,10 @@ import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { QUEUE_CONSTANTS } from './queue.constants.js';
+import { NotificationProcessor } from './notification.processor.js';
+import { PrismaService } from '../../prisma/prisma.service.js';
+import { WebhooksModule } from '../webhooks/webhooks.module.js';
+import { NotificationModule } from '../notification/notifications.module.js';
 
 @Module({
   imports: [
@@ -17,7 +21,21 @@ import { QUEUE_CONSTANTS } from './queue.constants.js';
     }),
     BullModule.registerQueue({
       name: QUEUE_CONSTANTS.NOTIFICATIONS,
+      defaultJobOptions: {
+        attempts: 3, 
+        backoff: {
+          type: 'exponential',
+          delay: 1000,
+        },
+      }, 
     }),
+    
+    WebhooksModule,
+    NotificationModule
+  ],
+  providers: [
+    PrismaService,         
+    NotificationProcessor, 
   ],
   exports: [BullModule],
 })

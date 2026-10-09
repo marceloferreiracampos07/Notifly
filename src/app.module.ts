@@ -5,6 +5,7 @@ import { validationSchema } from './config/validação-env-vars.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { UsersModule } from './modules/users/users.module.js';
+import { NotificationModule } from './modules/notification/notifications.module.js';
 import { JwtAuthGuard } from './common/guards/JwtAuthGuard.js';
 
 @Module({
@@ -16,6 +17,7 @@ import { JwtAuthGuard } from './common/guards/JwtAuthGuard.js';
     PrismaModule,
     AuthModule,
     UsersModule,
+    NotificationModule,
   ],
   providers: [
     {

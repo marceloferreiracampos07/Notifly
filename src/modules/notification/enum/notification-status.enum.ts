@@ -1,6 +1,6 @@
 export enum NotificationStatus{
     QUEUED = "QUEUED",
     PROCESSING = "PROCESSING",
-    SENT = "SENT ",
+    SENT = "SENT",
     FAILED = "FAILED"
 }

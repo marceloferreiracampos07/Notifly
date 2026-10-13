@@ -70,7 +70,7 @@ export class OutboxPublisherService {
               where: { id: event.id },
               data: { status: OutboxStatus.FAILED },
             });
-          } catch (dbUpdateError) {
+          } catch {
             this.logger.error(`Não foi possível marcar o evento ${event.id} como falhado no banco.`);
           }
         }

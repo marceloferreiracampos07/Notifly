@@ -2,7 +2,7 @@ import { Controller, Post, Get, HttpCode, HttpStatus, Body } from '@nestjs/commo
 import { WebhooksService } from '../service/webhooks.service.js';
 import { CreateWebhookSubscriptionDto } from '../DTO/Creatsubscription.js';
 import { CurrentUser } from '../../../common/decorators/get-user-decorator.js';
-import { UserSession } from '../../interface_user/user-session.interface.js';
+import type { UserSession } from '../../interface_user/user-session.interface.js';
 
 @Controller('webhooks')
 export class WebhooksController {
@@ -14,7 +14,7 @@ return this.webhookservice.createSubscription(user.id , createweebhooksubscripti
 }
 @Get('deliveries')
 async getSubscription(@CurrentUser() user:UserSession){
-    return this.webhookservice.getdelivery(user.id)
+    return this.webhookservice.getDeliveries(user.id)
 }
  
 }

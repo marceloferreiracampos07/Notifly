@@ -1,4 +1,5 @@
 import { Controller, Post, Get, Body, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { NotificationsService } from '../service/notifications.service.js';
 import { SendNotificationDto } from '../Dto/send-notification.js';
 import { FilterNotificationDto } from '../Dto/filter-notification.dto.js';
@@ -10,6 +11,7 @@ export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
   @HttpCode(HttpStatus.ACCEPTED)
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
   @Post('send')
   async send(@CurrentUser() user: UserSession, @Body() dto: SendNotificationDto) {
     return this.notificationsService.send(user.id, dto);

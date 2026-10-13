@@ -1,23 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../../prisma/prisma.service.js';
-import { CreateApiKeyDto } from '../../DTO/create-api-key.dto.js';
+import { CreateApiKeyDto } from '../DTO/create-api-key.dto.js';
 import * as crypto from 'crypto';
 
 @Injectable()
 export class ApiKeyService {
-  constructor(
-    private readonly prismaService: PrismaService,
-    private readonly configService: ConfigService,
-  ) {}
+  constructor(private readonly prismaService: PrismaService) {}
+
+  private hashKey(rawKey: string): string {
+    return crypto.createHash('sha256').update(rawKey).digest('hex');
+  }
 
   async generateApiKey(userId: string, dto?: CreateApiKeyDto) {
     const rawKey = dto?.key || crypto.randomBytes(24).toString('hex');
-    const hashedKey = crypto.createHash('sha256').update(rawKey).digest('hex');
 
     await this.prismaService.apiKey.create({
       data: {
-        key: hashedKey,
+        key: this.hashKey(rawKey),
         userId,
       },
     });
@@ -28,11 +27,19 @@ export class ApiKeyService {
     };
   }
 
-  getSystemApiKey() {
-    const apiKey = this.configService.get<string>('API_KEY');
+  async resolveUserByRawKey(rawKey: string): Promise<{ id: string; email: string } | null> {
+    const apiKey = await this.prismaService.apiKey.findUnique({
+      where: { key: this.hashKey(rawKey) },
+      include: { user: true },
+    });
+
+    if (!apiKey) {
+      return null;
+    }
+
     return {
-      apiKey,
-      message: 'API Key obtida com sucesso.',
+      id: apiKey.userId,
+      email: apiKey.user.email,
     };
   }
 }

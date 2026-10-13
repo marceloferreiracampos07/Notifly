@@ -2,13 +2,14 @@ import { Injectable, ConflictException, NotFoundException } from '@nestjs/common
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
-import bcrypt from 'bcrypt';
+import { PasswordHasher } from '../../common/security/password-hasher.service.js';
 
 @Injectable()
 export class UsersService {
-  private readonly saltRounds = 10;
-
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly passwordHasher: PasswordHasher,
+  ) {}
 
   private async verifyEmailExists(email: string): Promise<void> {
     const existingUser = await this.prisma.user.findUnique({
@@ -20,14 +21,10 @@ export class UsersService {
     }
   }
 
-  private async hashPassword(password: string): Promise<string> {
-    return bcrypt.hash(password, this.saltRounds);
-  }
-
   async create(data: CreateUserDto) {
     await this.verifyEmailExists(data.email);
 
-    const hashedPassword = await this.hashPassword(data.password);
+    const hashedPassword = await this.passwordHasher.hash(data.password);
 
     const newUser = await this.prisma.user.create({
       data: {
@@ -36,7 +33,7 @@ export class UsersService {
       },
     });
 
-    const { password, ...userWithoutPassword } = newUser;
+    const { password: _password, ...userWithoutPassword } = newUser;
     return userWithoutPassword;
   }
 
@@ -87,9 +84,9 @@ export class UsersService {
       }
     }
 
-    const updateData: any = { ...dto };
+    const updateData: UpdateUserDto = { ...dto };
     if (dto.password) {
-      updateData.password = await this.hashPassword(dto.password);
+      updateData.password = await this.passwordHasher.hash(dto.password);
     }
 
     return this.prisma.user.update({

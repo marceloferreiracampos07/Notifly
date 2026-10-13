@@ -1,4 +1,4 @@
-export class UserSession {
+export interface UserSession {
   id: string;
   email: string;
 }

@@ -6,7 +6,6 @@ import * as crypto from 'crypto';
 
 @Injectable()
 export class WebhooksService {
-  private static readonly MAX_ATTEMPTS = 3;
   private readonly logger = new Logger(WebhooksService.name);
 
   constructor(
@@ -69,7 +68,7 @@ export class WebhooksService {
     const failedDeliveries = await this.prisma.webhookDelivery.findMany({
       where: {
         status: 'FAILED',
-        attempts: { lt: WebhooksService.MAX_ATTEMPTS },
+        attempts: { lt: 3 },
       },
       include: { subscription: true },
       take: 50,

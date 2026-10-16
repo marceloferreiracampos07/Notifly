@@ -216,6 +216,7 @@ A API estará disponível em `http://localhost:3000`.
 | `npm run test` | Executa os testes unitários |
 | `npm run test:watch` | Testes em watch mode |
 | `npm run test:cov` | Relatório de cobertura |
+| `npm run test:integration` | Testes de integração com Testcontainers (Docker) |
 
 ---
 
@@ -330,15 +331,36 @@ OutboxEvent (standalone)
 
 ## Testes
 
-> Testes unitários cobrem guards, services, processors e interceptors.
+**Unitários** (`test/unit/**/*.spec.ts`) — usam mocks (`vi.fn()`) para isolar guards, services, processors e interceptors:
 
 ```bash
-npm run test        # executa todos os testes unitários
-npm run test:watch  # testes em watch mode
+npm run test        # executa os testes unitários
+npm run test:watch  # watch mode
 npm run test:cov    # relatório de cobertura
 ```
 
-Os testes ficam em `test/unit/**/*.spec.ts` e usam mocks (`vi.fn()`) para isolar a regra de negócio.
+**Integração** (`test/integration/**/*.e2e-spec.ts`) — sobem a aplicação real contra **PostgreSQL** e **Redis** efêmeros via **Testcontainers** (não tocam no banco de desenvolvimento). Requer **Docker** em execução:
+
+```bash
+npm run test:integration
+```
+
+O `global-setup` inicia os containers, roda `prisma migrate deploy` no banco descartável e injeta as variáveis de ambiente; o teardown derruba tudo. Cada arquivo é isolado (containers compartilhados, banco truncado e cron desabilitado para execução determinística).
+
+Cenários cobertos:
+
+- **Auth**: registro, login, refresh, rotas protegidas por JWT e por API key, respostas 401/409.
+- **Autorização**: `AdminGuard` (403 para usuário comum, 200 com a API key de sistema), `OwnershipGuard` (403 ao acessar/editar outro usuário), API key inválida (401) e validação de URL do webhook (400).
+- **Notificações**: escrita atômica de `Notification` + `OutboxEvent`, paginação, filtro por canal, validação e isolamento entre usuários.
+- **Entrega E2E**: fluxo `outbox → fila (BullMQ) → worker → webhook`, com um receptor HTTP local validando a assinatura `X-Hub-Signature-256` (HMAC-SHA256) e o status `SUCCESS` da entrega.
+- **Refresh token**: renovação devolvendo access token do mesmo `sub`, rejeição de access-token-como-refresh, token malformado e token expirado (401).
+- **Rate limiting**: bloqueio do login (429) após exceder o limite por minuto.
+- **Retry de webhook**: entrega que falha (HTTP 500) marcada como `FAILED`, reenvio atualizando a **mesma linha** para `SUCCESS` (sem duplicar registros) e respeito ao teto de **3 tentativas**.
+- **Idempotência do outbox**: reexecutar o despacho com o evento forçado a `PENDING` **não** reprocessa (dedup por `jobId = event.id`), sem duplicar notificações, eventos nem entregas.
+- **Concorrência do publisher**: duas instâncias despachando o mesmo evento **não** geram entrega duplicada (`jobId`).
+- **Falha do outbox**: evento com payload inválido é marcado como `FAILED` sem derrubar a varredura.
+- **Retry do job / falha definitiva**: com o provider indisponível, o job é tentado **3 vezes** (backoff exponencial), a notificação vira `FAILED` e dispara o webhook `notification.failed`.
+- **Limpeza (maintenance)**: purga de eventos `DISPATCHED` e entregas antigas, preservando os recentes e os `PENDING`.
 
 ---
 
@@ -362,6 +384,7 @@ src/
 │   ├── users/                  # CRUD de usuários
 │   ├── notification/           # Notificações + OutboxPublisherService
 │   ├── Queues/                 # Queue constants, processor (worker), sender
+│   ├── maintenance/            # Purga de outbox e entregas antigas (@Cron diário)
 │   └── webhooks/               # Assinaturas, delivery, signer
 ├── prisma/
 │   ├── schema.prisma           # Modelos
@@ -369,7 +392,11 @@ src/
 │   └── migrations/             # Migrações versionadas
 
 test/
-└── unit/                       # Testes unitários (Vitest)
+├── unit/                       # Testes unitários (Vitest)
+└── integration/                # Testes de integração (Vitest + Testcontainers)
+    ├── global-setup.ts         # Sobe containers (Postgres/Redis) e aplica migrações
+    ├── setup-env.ts            # Injeta variáveis de ambiente do banco efêmero
+    └── helpers/                # Bootstrap da app, reset do banco e utilitários HTTP
 ```
 
 ---
@@ -379,7 +406,6 @@ test/
 - **Envio real de provedores**: `NotificationSender` é um stub (delay de 1s). Próximo passo é integrar provedores reais por canal.
 - **Idempotência no consumo**: adicionar lock/de-duplicação no worker para reentregas.
 - **Observabilidade**: expor métricas (tamanho da fila, taxa de falha) e *health checks*.
-- **Limpeza da outbox**: política de arquivamento/purga de eventos `DISPATCHED` antigos.
 
 ---
 

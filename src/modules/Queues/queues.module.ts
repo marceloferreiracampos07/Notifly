@@ -1,6 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { Redis } from 'ioredis';
 import { QUEUE_CONSTANTS } from './queue.constants.js';
 import { NotificationProcessor } from './notification.processor.js';
 import { NotificationSender } from './notification-sender.service.js';
@@ -11,11 +12,12 @@ import { NotificationModule } from '../notification/notifications.module.js';
   imports: [
     BullModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        connection: {
+      useFactory: (configService: ConfigService) => ({
+        connection: new Redis({
           host: configService.get<string>('REDIS_HOST', 'localhost'),
           port: Number(configService.get<number>('REDIS_PORT')) || 6379,
-        },
+          maxRetriesPerRequest: null,
+        }),
       }),
       inject: [ConfigService],
     }),

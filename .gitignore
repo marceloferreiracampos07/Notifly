@@ -22,6 +22,7 @@ lerna-debug.log*
 /coverage
 /src/coverage
 /.nyc_output
+test/integration/.containers.json
 
 # IDEs and editors
 /.idea

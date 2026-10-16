@@ -19,7 +19,7 @@ describe('WebhooksController', () => {
     const dto = { url: 'https://cliente.com/hook' };
     webhooksServiceMock.createSubscription.mockResolvedValue({ id: 'sub-1' });
 
-    const result = await controller.CreateSubscription(dto, user);
+    const result = await controller.createSubscription(dto, user);
 
     expect(result).toEqual({ id: 'sub-1' });
     expect(webhooksServiceMock.createSubscription).toHaveBeenCalledWith(
@@ -32,7 +32,7 @@ describe('WebhooksController', () => {
     const user = { id: 'user-1', email: 'cliente@teste.com' };
     webhooksServiceMock.getDeliveries.mockResolvedValue([{ id: 'd1' }]);
 
-    const result = await controller.getSubscription(user);
+    const result = await controller.getDeliveries(user);
 
     expect(result).toEqual([{ id: 'd1' }]);
     expect(webhooksServiceMock.getDeliveries).toHaveBeenCalledWith('user-1');
